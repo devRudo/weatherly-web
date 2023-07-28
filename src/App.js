@@ -4,17 +4,18 @@ import { createBrowserHistory } from "history";
 import { ThemeProvider } from "@mui/material";
 import { useTheme } from "@mui/material";
 import MainRoutes from "./routes/MainRoutes";
+import Page from "./components/Page";
 
 const App = (props) => {
   const theme = useTheme();
   const history = createBrowserHistory();
 
   return (
-    <ThemeProvider theme={theme}>
+    <Page>
       <Router location={history.location} navigator={history}>
         <MainRoutes />
       </Router>
-    </ThemeProvider>
+    </Page>
   );
 };
 
