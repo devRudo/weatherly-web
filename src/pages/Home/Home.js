@@ -2,11 +2,18 @@ import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import {
   Box,
+  Button,
   Chip,
+  ClickAwayListener,
   Container,
+  Divider,
   Grid,
   IconButton,
   Link,
+  Popover,
+  Popper,
+  Slide,
+  TextField,
   Tooltip,
   Typography,
   colors,
@@ -14,9 +21,12 @@ import {
 import {
   Add,
   ArrowRightAlt,
+  ChevronRight,
   Circle,
+  Close,
   Info,
   NearMe,
+  Search,
   Settings,
 } from "@mui/icons-material";
 import { useTheme } from "@emotion/react";
@@ -24,15 +34,20 @@ import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
+import "swiper/css/navigation";
 import axios from "../../utils/axios";
 import {
   addLocation,
+  setActiveLocationIndex,
   setCurrentLocationId,
   setTimeOfUpdate,
   updateWeatherData,
 } from "../../redux/features/locations/locationsSlice";
+import { updateSettings } from "../../redux/features/settings/settingsSlice";
 import { convertTemp } from "../../utils";
 import moment from "moment";
+import CommonPicker from "../../components/CommonPicker/CommonPicker";
+import { Navigation } from "swiper/modules";
 // linear-gradient(90deg, rgba(87,87,87,0.8049681588505091) 0%, rgba(189,189,189,0.7937322037943293) 68%, rgba(121,121,121,0.7965411925583743) 98%)
 
 const Home = (props) => {
@@ -55,6 +70,119 @@ const Home = (props) => {
     activeLocationIndex !== undefined ? activeLocationIndex : 0
   );
 
+  const [showSearchBox, setShowSearchBox] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [searchData, setSearchData] = useState([]);
+  const [showSettingsBox, setShowSettingsBox] = useState(false);
+
+  const handleChange = (newValue, key) => {
+    dispatch(
+      updateSettings({
+        key,
+        value: newValue,
+      })
+    );
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const locationDetails = await axios.get("get-location-details", {
+        params: {
+          city: searchValue,
+          limit: 5,
+          deviceId: null,
+        },
+      });
+      // console.log(locationDetails.data);
+      if (
+        locationDetails?.data &&
+        Array.isArray(locationDetails?.data) &&
+        locationDetails?.data?.length > 0
+      ) {
+        setSearchData(
+          locationDetails.data.map((location) => {
+            return {
+              ...location,
+              id: `${location?.name
+                ?.toLowerCase()
+                ?.split(" ")
+                ?.join("-")}-${location?.state
+                ?.toLowerCase()
+                ?.split(" ")
+                ?.join("-")}-${location?.country
+                ?.toLowerCase()
+                ?.split(" ")
+                ?.join("-")}`,
+            };
+          })
+        );
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const handleAddNewLocation = async (location) => {
+    dispatch(setTimeOfUpdate(new Date().getTime()));
+    // console.log(JSON.stringify(location, null, 2));
+    dispatch(
+      addLocation({
+        ...location,
+        id: `${location?.name
+          ?.toLowerCase()
+          ?.split(" ")
+          ?.join("-")}-${location?.state
+          ?.toLowerCase()
+          ?.split(" ")
+          ?.join("-")}-${location?.country
+          ?.toLowerCase()
+          ?.split(" ")
+          ?.join("-")}`,
+      })
+    );
+    try {
+      const weatherData = await axios.get("get-weather-data", {
+        params: {
+          lat: location?.lat,
+          lon: location?.lon,
+        },
+      });
+      // console.log('weatherData', JSON.stringify(weatherData?.data, null, 2));
+      dispatch(
+        updateWeatherData({
+          key: "weatherData",
+          weatherData: weatherData?.data,
+          locationId: location?.id,
+        })
+      );
+      try {
+        const airPollutionData = await axios.get("get-air-pollution-data", {
+          params: {
+            lat: location?.lat,
+            lon: location?.lon,
+          },
+        });
+        // console.log(
+        //   'air pollution data',
+        //   JSON.stringify(airPollutionData?.data, null, 2),
+        // );
+        dispatch(
+          updateWeatherData({
+            key: "airPollution",
+            weatherData: airPollutionData?.data,
+            locationId: location?.id,
+          })
+        );
+      } catch (e) {
+        console.log("getAirPollutionDataForCurrentLocationError", e);
+      }
+    } catch (e) {
+      console.log("getWeatherForCurrentLocationError", e);
+    }
+  };
+
   useEffect(() => {
     if (
       locations &&
@@ -65,6 +193,14 @@ const Home = (props) => {
       setCurrentLocation(
         locations.filter((location) => location.id === currentLocationId)[0]
       );
+    }
+    if (locations && Array.isArray(locations) && locations.length > 0) {
+      dispatch(
+        setActiveLocationIndex({
+          activeLocationIndex: locations.length - 1,
+        })
+      );
+      setCurrenLocationIndex(locations.length - 1);
     }
   }, [locations, currentLocationId]);
 
@@ -228,13 +364,20 @@ const Home = (props) => {
   // console.log(locations);
   // console.log(timeOfUpdate);
   // console.log(currentLocationIndex);
+  // console.log(showSearchBox);
 
   return (
     <Swiper
-    // spaceBetween={50}
-    // slidesPerView={3}
-    // onSlideChange={() => console.log('slide change')}
-    // onSwiper={(swiper) => console.log(swiper)}
+      parallax={true}
+      navigation={true}
+      modules={[Navigation]}
+      // spaceBetween={50}
+      // slidesPerView={3}
+      onSlideChange={({ activeIndex }) => {
+        dispatch(setActiveLocationIndex({ activeLocationIndex: activeIndex }));
+        setCurrenLocationIndex(activeIndex);
+      }}
+      // onSwiper={(swiper) => console.log(swiper)}
     >
       {locations && Array.isArray(locations) && locations.length > 0 ? (
         locations.map((location) => (
@@ -255,25 +398,254 @@ const Home = (props) => {
                   <Box
                     display={"flex"}
                     justifyContent={"space-between"}
-                    alignItems={"center"}
+                    alignItems={"baseline"}
                     p={2}
                     m={1}
+                    gap={1}
                     sx={{
                       borderRadius: 4,
+                      position: "relative",
                     }}
                   >
-                    <IconButton
-                      sx={{
-                        background: "#1b1b1d",
-                      }}
+                    <Box
+                      display={"flex"}
+                      flexDirection={"column"}
+                      gap={1}
+                      position={"relative"}
                     >
-                      <Add
-                        sx={{
-                          color: "#f3f3f4",
-                          fontSize: 24,
-                        }}
-                      />
-                    </IconButton>
+                      <Box>
+                        <Box
+                          sx={{
+                            borderLeft: `1px solid ${theme.palette.primary.main}`,
+                            borderTop: `1px solid ${theme.palette.primary.main}`,
+                            borderBottom: `1px solid ${theme.palette.primary.main}`,
+                            borderRight: `1px solid ${theme.palette.primary.main}`,
+                            borderTopLeftRadius: "24px",
+                            borderBottomLeftRadius: "24px",
+                            borderTopRightRadius: "24px",
+                            borderBottomRightRadius: "24px",
+                            display: "flex",
+                            position: "relative",
+                            alignItems: "center",
+                            background: "#1b1b1d",
+                            zIndex: 20,
+                          }}
+                        >
+                          <IconButton
+                            sx={{
+                              background: "#1b1b1d",
+                            }}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setShowSearchBox((prev) => !prev);
+                            }}
+                          >
+                            {showSearchBox ? (
+                              <Close
+                                sx={{
+                                  color: "#f3f3f4",
+                                  fontSize: 24,
+                                }}
+                              />
+                            ) : (
+                              <Add
+                                sx={{
+                                  color: "#f3f3f4",
+                                  fontSize: 24,
+                                }}
+                              />
+                            )}
+                          </IconButton>
+                          {showSearchBox ? (
+                            <Box
+                              sx={{
+                                zIndex: 11,
+                                borderTopLeftRadius: "0px",
+                                borderBottomLeftRadius: "0px",
+                                borderTopRightRadius: "24px",
+                                borderBottomRightRadius: "24px",
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <form
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                }}
+                                onSubmit={handleSubmit}
+                              >
+                                <TextField
+                                  autoFocus
+                                  size="small"
+                                  variant="outlined"
+                                  value={searchValue}
+                                  onChange={(e) =>
+                                    setSearchValue(e.target.value)
+                                  }
+                                  sx={{
+                                    "& input": {
+                                      // paddingLeft: 5.5,
+                                    },
+                                    "& fieldset": {
+                                      borderTopLeftRadius: "24px",
+                                      borderBottomLeftRadius: "24px",
+                                      borderTopRightRadius: 0,
+                                      borderBottomRightRadius: 0,
+                                      border: "none",
+                                      "& :hover": {},
+                                    },
+                                  }}
+                                />
+                                <Button
+                                  variant={"contained"}
+                                  size="small"
+                                  startIcon={<Search />}
+                                  type="submit"
+                                  sx={{
+                                    borderTopLeftRadius: 0,
+                                    borderBottomLeftRadius: 0,
+                                    borderTopRightRadius: "24px",
+                                    borderBottomRightRadius: "24px",
+                                    marginRight: "0.5px",
+                                  }}
+                                >
+                                  Search
+                                </Button>
+                              </form>
+                            </Box>
+                          ) : null}
+                        </Box>
+                        {showSearchBox &&
+                        searchData &&
+                        searchData.length > 0 ? (
+                          <Box
+                            sx={{
+                              background: "#1b1b1d",
+                              border: `1px solid ${theme.palette.background.level2}`,
+                              borderRadius: 2,
+                              maxHeight: 300,
+                              overflowY: "scroll",
+                              width: 1,
+                              position: "absolute",
+                              top: 50,
+                              left: 0,
+                              "&::-webkit-scrollbar": {
+                                width: "3px",
+                              },
+                              "&::-webkit-scrollbar-track": {
+                                boxShadow: "inset 0 0 6px rgba(0,0,0,0.00)",
+                                webkitBoxShadow:
+                                  "inset 0 0 6px rgba(0,0,0,0.00)",
+                              },
+                              "&::-webkit-scrollbar-thumb": {
+                                backgroundColor: theme.palette.primary.main,
+                                borderRadius: 2,
+                              },
+                              scrollBehavior: "smooth",
+                              zIndex: 20,
+                            }}
+                          >
+                            {searchData &&
+                              searchData.length > 0 &&
+                              searchData.map((lc) => {
+                                return (
+                                  <>
+                                    <Box
+                                      key={`${lc?.name}${lc?.state}${lc?.country}`}
+                                      sx={{
+                                        display: "flex",
+                                        flexDirection: "row",
+                                        justifyContent: "space-between",
+                                        padding: 2,
+                                      }}
+                                    >
+                                      <Box
+                                        display={"flex"}
+                                        flexDirection={"column"}
+                                        gap={1}
+                                      >
+                                        <Typography
+                                          sx={{
+                                            fontSize: 16,
+                                          }}
+                                        >
+                                          {lc?.name}
+                                        </Typography>
+                                        <Typography
+                                          sx={{
+                                            fontSize: 14,
+                                          }}
+                                        >
+                                          {`${lc?.state}, ${lc?.country}`}
+                                        </Typography>
+                                      </Box>
+                                      <Button
+                                        variant="text"
+                                        size="small"
+                                        onClick={() => {
+                                          if (
+                                            locations?.find(
+                                              (location) =>
+                                                location?.id === lc?.id
+                                            ) !== undefined
+                                          ) {
+                                          } else {
+                                            handleAddNewLocation(lc);
+                                          }
+                                        }}
+                                        disabled={
+                                          locations?.find(
+                                            (location) =>
+                                              location?.id === lc?.id
+                                          ) !== undefined
+                                        }
+                                      >
+                                        {locations?.find(
+                                          (location) => location?.id === lc?.id
+                                        ) !== undefined ? (
+                                          <Box
+                                            sx={{
+                                              display: "flex",
+                                              flexDirection: "row",
+                                              alignItems: "center",
+                                            }}
+                                          >
+                                            <Typography
+                                              sx={{
+                                                color: "#fff",
+                                              }}
+                                            >
+                                              Added
+                                            </Typography>
+                                            <ChevronRight
+                                              sx={{
+                                                color: "#fff",
+                                              }}
+                                            />
+                                          </Box>
+                                        ) : (
+                                          <Add
+                                            sx={{
+                                              color: "#fff",
+                                            }}
+                                          />
+                                        )}
+                                      </Button>
+                                    </Box>
+                                    <Divider
+                                      sx={{
+                                        width: "100%",
+                                        background: "#f3f3f3",
+                                      }}
+                                    />
+                                  </>
+                                );
+                              })}
+                          </Box>
+                        ) : null}
+                      </Box>
+                    </Box>
                     <Box
                       sx={{
                         display: "flex",
@@ -281,10 +653,14 @@ const Home = (props) => {
                         justifyContent: "center",
                         flexDirection: "column",
                         gap: 1,
+                        position: "absolute",
+                        top: 24,
+                        left: "50%",
+                        transform: "translate(-25%, -25%)",
                       }}
                     >
                       <Typography variant="h5" color={"#f3f3f4"}>
-                        {location?.name}
+                        {locations?.[currentLocationIndex]?.name}
                       </Typography>
                       <Box
                         sx={{
@@ -292,7 +668,7 @@ const Home = (props) => {
                           alignItems: "center",
                           justifyContent: "center",
                           flexDirection: "row",
-                          gap: 10,
+                          gap: 2,
                         }}
                       >
                         {locations?.map((location, index) =>
@@ -305,6 +681,10 @@ const Home = (props) => {
                                   index === currentLocationIndex
                                     ? "#f1f1f1"
                                     : "#a4a4a4",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                setCurrenLocationIndex(index);
                               }}
                             />
                           ) : (
@@ -316,24 +696,222 @@ const Home = (props) => {
                                   index === currentLocationIndex
                                     ? "#f1f1f1"
                                     : "#a4a4a4",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                setCurrenLocationIndex(index);
                               }}
                             />
                           )
                         )}
                       </Box>
                     </Box>
-                    <IconButton
-                      sx={{
-                        background: "#1b1b1d",
-                      }}
+                    <Box
+                      display={"flex"}
+                      flexDirection={"column"}
+                      gap={1}
+                      position={"relative"}
                     >
-                      <Settings
+                      <Box
                         sx={{
-                          color: "#f3f3f4",
-                          fontSize: 24,
+                          borderLeft: `1px solid ${theme.palette.primary.main}`,
+                          borderTop: `1px solid ${theme.palette.primary.main}`,
+                          borderBottom: `1px solid ${theme.palette.primary.main}`,
+                          borderRight: `1px solid ${theme.palette.primary.main}`,
+                          borderTopLeftRadius: "24px",
+                          borderBottomLeftRadius: "24px",
+                          borderTopRightRadius: "24px",
+                          borderBottomRightRadius: "24px",
+                          display: "flex",
+                          position: "relative",
+                          alignItems: "center",
                         }}
-                      />
-                    </IconButton>
+                      >
+                        <IconButton
+                          sx={{
+                            background: "#1b1b1d",
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setShowSettingsBox((prev) => !prev);
+                          }}
+                        >
+                          {showSettingsBox ? (
+                            <Close
+                              sx={{
+                                color: "#f3f3f4",
+                                fontSize: 24,
+                              }}
+                            />
+                          ) : (
+                            <Settings
+                              sx={{
+                                color: "#f3f3f4",
+                                fontSize: 24,
+                              }}
+                            />
+                          )}
+                        </IconButton>
+                      </Box>
+                      {showSettingsBox ? (
+                        <Box
+                          sx={{
+                            background: "#1b1b1d",
+                            border: `1px solid ${theme.palette.background.level2}`,
+                            borderRadius: 2,
+                            // minHeight: 300,
+                            minWidth: {
+                              xs: "calc(100vw - 40px)",
+                              sm: 300,
+                              md: 400,
+                            },
+                            // overflowY: "scroll",
+                            width: "auto",
+                            position: "absolute",
+                            top: 60,
+                            right: 0,
+                            zIndex: 19,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              padding: 2,
+                            }}
+                          >
+                            <Typography
+                              sx={{ fontSize: 14, fontWeight: "bold" }}
+                            >
+                              UNITS
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                marginTop: 2,
+                                gap: 2,
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontWeight: "bold",
+                                  fontSize: 14,
+                                  flex: 1,
+                                }}
+                              >
+                                Temperature Units
+                              </Typography>
+                              <CommonPicker
+                                items={[
+                                  {
+                                    label: "Celsius",
+                                    value: "C",
+                                  },
+                                  {
+                                    label: "Fahrenheit",
+                                    value: "F",
+                                  },
+                                ]}
+                                value={temperatureUnit}
+                                handleChange={handleChange}
+                                type={"temperatureUnit"}
+                              />
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                marginTop: 2,
+                                gap: 2,
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontWeight: "bold",
+                                  fontSize: 14,
+                                  flex: 1,
+                                }}
+                              >
+                                Wind speed units
+                              </Typography>
+                              <CommonPicker
+                                items={[
+                                  {
+                                    label: "Kilometers per hour (km/h)",
+                                    value: "km/h",
+                                  },
+                                  {
+                                    label: "Meters per second (m/s)",
+                                    value: "m/s",
+                                  },
+                                  {
+                                    label: "Miles per hour (mph)",
+                                    value: "mph",
+                                  },
+                                  {
+                                    label: "Knot (kn)",
+                                    value: "kn",
+                                  },
+                                ]}
+                                value={windSpeedUnit}
+                                handleChange={handleChange}
+                                type={"windSpeedUnit"}
+                              />
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                marginTop: 2,
+                                gap: 2,
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontWeight: "bold",
+                                  fontSize: 14,
+                                  flex: 2,
+                                }}
+                              >
+                                Atmospheric pressure units
+                              </Typography>
+                              <CommonPicker
+                                items={[
+                                  {
+                                    label: "Hectopascal (hPa)",
+                                    value: "hpa",
+                                  },
+                                  {
+                                    label: "Millibar (mbar)",
+                                    value: "mbar",
+                                  },
+                                  {
+                                    label: "Millimeter of mercury (mmHg)",
+                                    value: "mmhg",
+                                  },
+                                  {
+                                    label: "Inch of mercury (inHg)",
+                                    value: "inhg",
+                                  },
+                                  {
+                                    label: "Standard atmosphere (atm)",
+                                    value: "atm",
+                                  },
+                                ]}
+                                value={pressureUnit}
+                                handleChange={handleChange}
+                                type={"pressureUnit"}
+                              />
+                            </Box>
+                          </Box>
+                        </Box>
+                      ) : null}
+                    </Box>
                   </Box>
                   <Box
                     display={"flex"}
