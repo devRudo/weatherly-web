@@ -1411,10 +1411,21 @@ const Home = (props) => {
                         title={
                           <React.Fragment>
                             <Link
+                              href="https://icons8.com/icon/3LC5QTsCuh12/rain-cloud"
+                              target="_blank"
+                              sx={{
+                                color: "#fff",
+                                display: "block",
+                              }}
+                            >
+                              Animated cloud gif provided by Icons8
+                            </Link>
+                            <Link
                               href="https://www.freepik.com/free-photo/cloud-blue-sky_1017702.htm#query=weather&position=6&from_view=search&track=sph"
                               target="_blank"
                               sx={{
                                 color: "#fff",
+                                display: "block",
                               }}
                             >
                               Background Image by jannoon028 on Freepik
@@ -1432,8 +1443,18 @@ const Home = (props) => {
           </SwiperSlide>
         ))
       ) : (
-        <Box>
-          <h1>test</h1>
+        <Box
+          sx={{
+            background: "#111015",
+            minHeight: "100vh",
+            minWidth: "100vw",
+            overflow: "hidden",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <img src="/loader.gif" />
         </Box>
       )}
     </Swiper>
