@@ -24,6 +24,7 @@ import {
   ChevronRight,
   Circle,
   Close,
+  Download,
   Info,
   NearMe,
   Search,
@@ -409,9 +410,104 @@ const Home = (props) => {
                   >
                     <Box
                       display={"flex"}
-                      flexDirection={"column"}
-                      gap={1}
+                      flexDirection={"row"}
+                      alignItems={"center"}
+                      gap={3}
                       position={"relative"}
+                    >
+                      <Box
+                        display={"flex"}
+                        flexDirection={"row"}
+                        alignItems={"center"}
+                        gap={2}
+                      >
+                        <img
+                          src="/Weatherly.png"
+                          width={"40px"}
+                          style={{
+                            borderRadius: "20px",
+                          }}
+                        />
+                        <Typography
+                          style={{
+                            textTransform: "uppercase",
+                            letterSpacing: 3,
+                            fontWeight: "bold",
+                            fontSize: "18px",
+                          }}
+                        >
+                          Weatherly
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexDirection: "column",
+                        gap: 1,
+                        position: "absolute",
+                        top: 24,
+                        left: "50%",
+                        transform: "translate(-25%, -25%)",
+                      }}
+                    >
+                      <Typography variant="h5" color={"#f3f3f4"}>
+                        {locations?.[currentLocationIndex]?.name}
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexDirection: "row",
+                          gap: 2,
+                        }}
+                      >
+                        {locations?.map((location, index) =>
+                          location?.id === currentLocationId ? (
+                            <NearMe
+                              key={index}
+                              sx={{
+                                fontSize: 20,
+                                color:
+                                  index === currentLocationIndex
+                                    ? "#f1f1f1"
+                                    : "#a4a4a4",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                setCurrenLocationIndex(index);
+                              }}
+                            />
+                          ) : (
+                            <Circle
+                              key={index}
+                              sx={{
+                                fontSize: 8,
+                                color:
+                                  index === currentLocationIndex
+                                    ? "#f1f1f1"
+                                    : "#a4a4a4",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                setCurrenLocationIndex(index);
+                              }}
+                            />
+                          )
+                        )}
+                      </Box>
+                    </Box>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        // alignItems: 'center',
+                        gap: 2,
+                        position: "relative",
+                      }}
                     >
                       <Box>
                         <Box
@@ -645,272 +741,212 @@ const Home = (props) => {
                           </Box>
                         ) : null}
                       </Box>
-                    </Box>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexDirection: "column",
-                        gap: 1,
-                        position: "absolute",
-                        top: 24,
-                        left: "50%",
-                        transform: "translate(-25%, -25%)",
-                      }}
-                    >
-                      <Typography variant="h5" color={"#f3f3f4"}>
-                        {locations?.[currentLocationIndex]?.name}
-                      </Typography>
                       <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexDirection: "row",
-                          gap: 2,
-                        }}
+                        display={"flex"}
+                        flexDirection={"column"}
+                        gap={1}
+                        position={"relative"}
                       >
-                        {locations?.map((location, index) =>
-                          location?.id === currentLocationId ? (
-                            <NearMe
-                              key={index}
-                              sx={{
-                                fontSize: 20,
-                                color:
-                                  index === currentLocationIndex
-                                    ? "#f1f1f1"
-                                    : "#a4a4a4",
-                                cursor: "pointer",
-                              }}
-                              onClick={() => {
-                                setCurrenLocationIndex(index);
-                              }}
-                            />
-                          ) : (
-                            <Circle
-                              key={index}
-                              sx={{
-                                fontSize: 8,
-                                color:
-                                  index === currentLocationIndex
-                                    ? "#f1f1f1"
-                                    : "#a4a4a4",
-                                cursor: "pointer",
-                              }}
-                              onClick={() => {
-                                setCurrenLocationIndex(index);
-                              }}
-                            />
-                          )
-                        )}
-                      </Box>
-                    </Box>
-                    <Box
-                      display={"flex"}
-                      flexDirection={"column"}
-                      gap={1}
-                      position={"relative"}
-                    >
-                      <Box
-                        sx={{
-                          borderLeft: `1px solid ${theme.palette.primary.main}`,
-                          borderTop: `1px solid ${theme.palette.primary.main}`,
-                          borderBottom: `1px solid ${theme.palette.primary.main}`,
-                          borderRight: `1px solid ${theme.palette.primary.main}`,
-                          borderTopLeftRadius: "24px",
-                          borderBottomLeftRadius: "24px",
-                          borderTopRightRadius: "24px",
-                          borderBottomRightRadius: "24px",
-                          display: "flex",
-                          position: "relative",
-                          alignItems: "center",
-                        }}
-                      >
-                        <IconButton
-                          sx={{
-                            background: "#1b1b1d",
-                          }}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setShowSettingsBox((prev) => !prev);
-                          }}
-                        >
-                          {showSettingsBox ? (
-                            <Close
-                              sx={{
-                                color: "#f3f3f4",
-                                fontSize: 24,
-                              }}
-                            />
-                          ) : (
-                            <Settings
-                              sx={{
-                                color: "#f3f3f4",
-                                fontSize: 24,
-                              }}
-                            />
-                          )}
-                        </IconButton>
-                      </Box>
-                      {showSettingsBox ? (
                         <Box
                           sx={{
-                            background: "#1b1b1d",
-                            border: `1px solid ${theme.palette.background.level2}`,
-                            borderRadius: 2,
-                            // minHeight: 300,
-                            minWidth: {
-                              xs: "calc(100vw - 40px)",
-                              sm: 300,
-                              md: 400,
-                            },
-                            // overflowY: "scroll",
-                            width: "auto",
-                            position: "absolute",
-                            top: 60,
-                            right: 0,
-                            zIndex: 19,
+                            borderLeft: `1px solid ${theme.palette.primary.main}`,
+                            borderTop: `1px solid ${theme.palette.primary.main}`,
+                            borderBottom: `1px solid ${theme.palette.primary.main}`,
+                            borderRight: `1px solid ${theme.palette.primary.main}`,
+                            borderTopLeftRadius: "24px",
+                            borderBottomLeftRadius: "24px",
+                            borderTopRightRadius: "24px",
+                            borderBottomRightRadius: "24px",
+                            display: "flex",
+                            position: "relative",
+                            alignItems: "center",
                           }}
                         >
-                          <Box
+                          <IconButton
                             sx={{
-                              padding: 2,
+                              background: "#1b1b1d",
+                            }}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setShowSettingsBox((prev) => !prev);
                             }}
                           >
-                            <Typography
-                              sx={{ fontSize: 14, fontWeight: "bold" }}
-                            >
-                              UNITS
-                            </Typography>
+                            {showSettingsBox ? (
+                              <Close
+                                sx={{
+                                  color: "#f3f3f4",
+                                  fontSize: 24,
+                                }}
+                              />
+                            ) : (
+                              <Settings
+                                sx={{
+                                  color: "#f3f3f4",
+                                  fontSize: 24,
+                                }}
+                              />
+                            )}
+                          </IconButton>
+                        </Box>
+                        {showSettingsBox ? (
+                          <Box
+                            sx={{
+                              background: "#1b1b1d",
+                              border: `1px solid ${theme.palette.background.level2}`,
+                              borderRadius: 2,
+                              // minHeight: 300,
+                              minWidth: {
+                                xs: "calc(100vw - 40px)",
+                                sm: 300,
+                                md: 400,
+                              },
+                              // overflowY: "scroll",
+                              width: "auto",
+                              position: "absolute",
+                              top: 60,
+                              right: 0,
+                              zIndex: 19,
+                            }}
+                          >
                             <Box
                               sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginTop: 2,
-                                gap: 2,
+                                padding: 2,
                               }}
                             >
                               <Typography
+                                sx={{ fontSize: 14, fontWeight: "bold" }}
+                              >
+                                UNITS
+                              </Typography>
+                              <Box
                                 sx={{
-                                  fontWeight: "bold",
-                                  fontSize: 14,
-                                  flex: 1,
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  marginTop: 2,
+                                  gap: 2,
                                 }}
                               >
-                                Temperature Units
-                              </Typography>
-                              <CommonPicker
-                                items={[
-                                  {
-                                    label: "Celsius",
-                                    value: "C",
-                                  },
-                                  {
-                                    label: "Fahrenheit",
-                                    value: "F",
-                                  },
-                                ]}
-                                value={temperatureUnit}
-                                handleChange={handleChange}
-                                type={"temperatureUnit"}
-                              />
-                            </Box>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginTop: 2,
-                                gap: 2,
-                              }}
-                            >
-                              <Typography
+                                <Typography
+                                  sx={{
+                                    fontWeight: "bold",
+                                    fontSize: 14,
+                                    flex: 1,
+                                  }}
+                                >
+                                  Temperature Units
+                                </Typography>
+                                <CommonPicker
+                                  items={[
+                                    {
+                                      label: "Celsius",
+                                      value: "C",
+                                    },
+                                    {
+                                      label: "Fahrenheit",
+                                      value: "F",
+                                    },
+                                  ]}
+                                  value={temperatureUnit}
+                                  handleChange={handleChange}
+                                  type={"temperatureUnit"}
+                                />
+                              </Box>
+                              <Box
                                 sx={{
-                                  fontWeight: "bold",
-                                  fontSize: 14,
-                                  flex: 1,
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  marginTop: 2,
+                                  gap: 2,
                                 }}
                               >
-                                Wind speed units
-                              </Typography>
-                              <CommonPicker
-                                items={[
-                                  {
-                                    label: "Kilometers per hour (km/h)",
-                                    value: "km/h",
-                                  },
-                                  {
-                                    label: "Meters per second (m/s)",
-                                    value: "m/s",
-                                  },
-                                  {
-                                    label: "Miles per hour (mph)",
-                                    value: "mph",
-                                  },
-                                  {
-                                    label: "Knot (kn)",
-                                    value: "kn",
-                                  },
-                                ]}
-                                value={windSpeedUnit}
-                                handleChange={handleChange}
-                                type={"windSpeedUnit"}
-                              />
-                            </Box>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginTop: 2,
-                                gap: 2,
-                              }}
-                            >
-                              <Typography
+                                <Typography
+                                  sx={{
+                                    fontWeight: "bold",
+                                    fontSize: 14,
+                                    flex: 1,
+                                  }}
+                                >
+                                  Wind speed units
+                                </Typography>
+                                <CommonPicker
+                                  items={[
+                                    {
+                                      label: "Kilometers per hour (km/h)",
+                                      value: "km/h",
+                                    },
+                                    {
+                                      label: "Meters per second (m/s)",
+                                      value: "m/s",
+                                    },
+                                    {
+                                      label: "Miles per hour (mph)",
+                                      value: "mph",
+                                    },
+                                    {
+                                      label: "Knot (kn)",
+                                      value: "kn",
+                                    },
+                                  ]}
+                                  value={windSpeedUnit}
+                                  handleChange={handleChange}
+                                  type={"windSpeedUnit"}
+                                />
+                              </Box>
+                              <Box
                                 sx={{
-                                  fontWeight: "bold",
-                                  fontSize: 14,
-                                  flex: 2,
+                                  display: "flex",
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  marginTop: 2,
+                                  gap: 2,
                                 }}
                               >
-                                Atmospheric pressure units
-                              </Typography>
-                              <CommonPicker
-                                items={[
-                                  {
-                                    label: "Hectopascal (hPa)",
-                                    value: "hpa",
-                                  },
-                                  {
-                                    label: "Millibar (mbar)",
-                                    value: "mbar",
-                                  },
-                                  {
-                                    label: "Millimeter of mercury (mmHg)",
-                                    value: "mmhg",
-                                  },
-                                  {
-                                    label: "Inch of mercury (inHg)",
-                                    value: "inhg",
-                                  },
-                                  {
-                                    label: "Standard atmosphere (atm)",
-                                    value: "atm",
-                                  },
-                                ]}
-                                value={pressureUnit}
-                                handleChange={handleChange}
-                                type={"pressureUnit"}
-                              />
+                                <Typography
+                                  sx={{
+                                    fontWeight: "bold",
+                                    fontSize: 14,
+                                    flex: 2,
+                                  }}
+                                >
+                                  Atmospheric pressure units
+                                </Typography>
+                                <CommonPicker
+                                  items={[
+                                    {
+                                      label: "Hectopascal (hPa)",
+                                      value: "hpa",
+                                    },
+                                    {
+                                      label: "Millibar (mbar)",
+                                      value: "mbar",
+                                    },
+                                    {
+                                      label: "Millimeter of mercury (mmHg)",
+                                      value: "mmhg",
+                                    },
+                                    {
+                                      label: "Inch of mercury (inHg)",
+                                      value: "inhg",
+                                    },
+                                    {
+                                      label: "Standard atmosphere (atm)",
+                                      value: "atm",
+                                    },
+                                  ]}
+                                  value={pressureUnit}
+                                  handleChange={handleChange}
+                                  type={"pressureUnit"}
+                                />
+                              </Box>
                             </Box>
                           </Box>
-                        </Box>
-                      ) : null}
+                        ) : null}
+                      </Box>
                     </Box>
                   </Box>
                   <Box
@@ -1355,25 +1391,40 @@ const Home = (props) => {
                       <Typography variant="body1">Data provided by</Typography>
                       <img src="/ow.png" width={"60px"} />
                     </Box>
-                    <Tooltip
-                      arrow
-                      placement="left"
-                      title={
-                        <React.Fragment>
-                          <Link
-                            href="https://www.freepik.com/free-photo/cloud-blue-sky_1017702.htm#query=weather&position=6&from_view=search&track=sph"
-                            target="_blank"
-                            sx={{
-                              color: "#fff",
-                            }}
-                          >
-                            Background Image by jannoon028 on Freepik
-                          </Link>
-                        </React.Fragment>
-                      }
-                    >
-                      <Info />
-                    </Tooltip>
+                    <Box display={"flex"} alignItems={"center"} gap={2}>
+                      <Button
+                        startIcon={<Download />}
+                        variant="contained"
+                        color="primary"
+                        onClick={() =>
+                          window.open(
+                            "https://play.google.com/store/apps/details?id=com.weatherly",
+                            "_blank"
+                          )
+                        }
+                      >
+                        Download Android App
+                      </Button>
+                      <Tooltip
+                        arrow
+                        placement="left"
+                        title={
+                          <React.Fragment>
+                            <Link
+                              href="https://www.freepik.com/free-photo/cloud-blue-sky_1017702.htm#query=weather&position=6&from_view=search&track=sph"
+                              target="_blank"
+                              sx={{
+                                color: "#fff",
+                              }}
+                            >
+                              Background Image by jannoon028 on Freepik
+                            </Link>
+                          </React.Fragment>
+                        }
+                      >
+                        <Info />
+                      </Tooltip>
+                    </Box>
                   </Box>
                 </>
               ) : null}
